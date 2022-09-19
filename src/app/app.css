@@ -1,0 +1,9 @@
+html{
+    background: rgba(0, 0, 0, 0.04);
+}
+
+.app{
+    max-width: 1010px;
+    background-color: white;
+    margin: 0 auto;
+}
