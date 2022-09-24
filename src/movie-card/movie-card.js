@@ -20,7 +20,7 @@ export default class MovieCard extends Component {
 
     return (
       <li className="movie-card">
-        <img className="movie-card__image" src={`https://image.tmdb.org/t/p/w500${imgLink}`} alt={name} />
+        <img className="movie-card__image" src={`https://image.tmdb.org/t/p/original${imgLink}`} alt={name} />
         <div className="movie-card__info">
           <h1 className="movie-card__name">{name}</h1>
           <div className="movie-card__date">{date}</div>

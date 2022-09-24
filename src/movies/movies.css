@@ -6,3 +6,5 @@
     width: 100%;
     flex-wrap: wrap;
 }
+
+@import '~antd/dist/antd.css'

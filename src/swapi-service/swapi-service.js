@@ -11,7 +11,7 @@ export default class SwapiService {
 
   async getAllMovies() {
     const res = await this.getData(
-      'https://api.themoviedb.org/3/search/movie?api_key=71964362e6f4b8cb55e7d1ffd26051f0&language=en-US&page=1&include_adult=false&query=return'
+      'https://api.themoviedb.org/3/search/movie?api_key=71964362e6f4b8cb55e7d1ffd26051f0&query=return'
     )
 
     return res.results
