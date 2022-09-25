@@ -1,4 +1,4 @@
-export default class SwapiService {
+export default class MovapiService {
   async getData(url) {
     const answer = await fetch(url)
 
@@ -9,11 +9,11 @@ export default class SwapiService {
     return result
   }
 
-  async getAllMovies() {
+  async getAllMovies(movieName, pageNumber) {
     const res = await this.getData(
-      'https://api.themoviedb.org/3/search/movie?api_key=71964362e6f4b8cb55e7d1ffd26051f0&query=return'
+      `https://api.themoviedb.org/3/search/movie?api_key=71964362e6f4b8cb55e7d1ffd26051f0&query=${movieName}&page=${pageNumber}`
     )
 
-    return res.results
+    return res
   }
 }

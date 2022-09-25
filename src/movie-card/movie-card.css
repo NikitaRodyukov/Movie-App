@@ -8,7 +8,7 @@
 
 .movie-card__image{
     width: 183px;
-    object-fit: cover;
+    object-fit: fill;
 }
 
 .movie-card__info{

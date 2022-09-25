@@ -1,11 +1,38 @@
-#root{
+body{
+    height: fit-content;
     background: rgba(0, 0, 0, 0.04);
 }
 
 .app{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
     max-width: 1010px;
     background-color: white;
     margin: 0 auto;
+}
+
+.film-search{
+    width: 90%;
+    height: 40px;
+    margin: 20px auto;
+    padding: 9px 12px;
+
+    border: 1px solid #D9D9D9;
+    border-radius: 4px;
+
+    font-family: 'Inter';
+    font-style: normal;
+    font-weight: 400;
+    font-size: 16px;
+    line-height: 22px;
+    color: rgba(0, 0, 0, 0.25);
+}
+
+.ant-pagination{
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1rem;
 }
 
 @import '~antd/dist/antd.css'
