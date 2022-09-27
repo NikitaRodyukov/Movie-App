@@ -1,10 +1,11 @@
+/* eslint-disable react/destructuring-assignment */
 /* eslint-disable react/no-unused-state */
 /* eslint-disable camelcase */
 import { Component } from 'react'
 import { Pagination } from 'antd'
 import { debounce } from 'lodash'
 
-import MovapiService from '../swapi-service/movapi-service'
+import MovapiService from '../movapi-service/movapi-service'
 import Movies from '../movies/movies'
 import './app.css'
 
@@ -18,6 +19,8 @@ export default class App extends Component {
     currentPage: 1,
     isLoading: false,
     error: false,
+    guestSessionId: '',
+    allGenres: [],
   }
 
   updateSearchValue = debounce((value) => {
@@ -25,6 +28,20 @@ export default class App extends Component {
       searchValue: value,
     })
   }, 500)
+
+  componentDidMount() {
+    this.movapiService.createNewGuestSession().then((guestSessionId) =>
+      this.setState({
+        guestSessionId,
+      })
+    )
+
+    this.movapiService.getMoviesGenres().then((allGenres) =>
+      this.setState({
+        allGenres,
+      })
+    )
+  }
 
   componentDidUpdate(prevprops, prevState) {
     const { searchValue, currentPage } = this.state
@@ -46,7 +63,7 @@ export default class App extends Component {
     })
 
     this.movapiService
-      .getAllMovies(searchValue, currentPage)
+      .getMovieList(searchValue, currentPage)
       .then((answer) => {
         const { results, total_results } = answer
 
@@ -79,8 +96,7 @@ export default class App extends Component {
   }
 
   render() {
-    const { movies, isLoading, error, totalResults, currentPage } = this.state
-
+    const { movies, isLoading, error, totalResults, currentPage, allGenres } = this.state
     return (
       <div className="app">
         <input
@@ -89,17 +105,15 @@ export default class App extends Component {
           placeholder="Type to search..."
           onChange={(event) => this.updateSearchValue(event.target.value)}
         />
-        <Movies movies={movies} isLoading={isLoading} error={error} />
-        {Boolean(movies.length) && (
-          <Pagination
-            current={currentPage}
-            onChange={this.onPageChange}
-            total={totalResults}
-            defaultPageSize={20}
-            showSizeChanger={false}
-            hideOnSinglePage
-          />
-        )}
+        <Movies movies={movies} isLoading={isLoading} error={error} allGenres={allGenres} />
+        <Pagination
+          current={currentPage}
+          onChange={this.onPageChange}
+          total={totalResults}
+          defaultPageSize={20}
+          showSizeChanger={false}
+          hideOnSinglePage
+        />
       </div>
     )
   }
