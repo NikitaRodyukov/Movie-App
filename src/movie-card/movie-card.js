@@ -9,13 +9,11 @@ import MovapiService from '../movapi-service/movapi-service'
 import './movie-card.css'
 // добавить state isLoadingImg и errLoadingImg если isLoadingImg=false и errLoadingImg=true то показывать ошибку, если isLoadingImg=true
 // и errLoadingImg=false, то компонент загрузки если оба false то картинку
-// при оценке фильма, нужно записать фильм с оценкой в state app и потом  смотреть оценивали ли этот фильм по id
+
 export default class MovieCard extends Component {
   movapiService = new MovapiService()
 
   state = {
-    isLoadingImg: true,
-    errLoadingImg: false,
     starCount: this.props.rateValue,
   }
 
@@ -63,14 +61,6 @@ export default class MovieCard extends Component {
     return className
   }
 
-  imgLoaded = () => {
-    this.setState({ isLoadingImg: false, errLoadingImg: false })
-  }
-
-  imgLoadingError = () => {
-    this.setState({ isLoadingImg: false, errLoadingImg: true })
-  }
-
   render() {
     const {
       titleName,
@@ -82,11 +72,9 @@ export default class MovieCard extends Component {
       isLoading,
     } = this.props
 
-    const { starCount, isLoadingImg, errLoadingImg } = this.state
+    const { starCount } = this.state
 
     let { date } = this.props
-
-    const errorMessage = <Alert message="Try restarting page to get image" type="error" className="top" />
 
     const filmGenres = FilmGenreIds.map(
       (filmGenreId) => genres.filter(({ id }) => Number(filmGenreId) === Number(id))[0]
@@ -104,19 +92,14 @@ export default class MovieCard extends Component {
       date = 'Date unknown'
     }
 
-    if (!imgLink) {
-      this.imgLoadingError()
-    }
-
     const content = (
       <>
         <div className="movie-card__image">
-          <img
-            src={`https://image.tmdb.org/t/p/w400${imgLink}`}
-            alt=""
-            onLoad={this.imgLoaded}
-            onError={this.imgLoadingError}
-          />
+          {imgLink ? (
+            <img src={`https://image.tmdb.org/t/p/w400${imgLink}`} alt="" />
+          ) : (
+            <Alert message="Error" description="Error while downloading image." type="error" />
+          )}
         </div>
 
         <div className="movie-card__info">

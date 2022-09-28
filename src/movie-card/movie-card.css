@@ -134,3 +134,11 @@
     height: 350px;
     width: 183px;
 }
+
+.hide{
+    display: none;
+}
+
+.show{
+    display: block;
+}
