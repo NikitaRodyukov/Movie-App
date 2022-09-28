@@ -1,6 +1,7 @@
+/* eslint-disable no-unused-vars */
 /* eslint-disable react/destructuring-assignment */
 import { format, parseISO } from 'date-fns'
-import { Rate } from 'antd'
+import { Spin, Rate, Alert } from 'antd'
 import { Component } from 'react'
 
 import MovapiService from '../movapi-service/movapi-service'
@@ -13,6 +14,8 @@ export default class MovieCard extends Component {
   movapiService = new MovapiService()
 
   state = {
+    isLoadingImg: true,
+    errLoadingImg: false,
     starCount: this.props.rateValue,
   }
 
@@ -60,6 +63,14 @@ export default class MovieCard extends Component {
     return className
   }
 
+  imgLoaded = () => {
+    this.setState({ isLoadingImg: false, errLoadingImg: false })
+  }
+
+  imgLoadingError = () => {
+    this.setState({ isLoadingImg: false, errLoadingImg: true })
+  }
+
   render() {
     const {
       titleName,
@@ -68,11 +79,14 @@ export default class MovieCard extends Component {
       FilmGenreIds,
       overview,
       voteAverage,
+      isLoading,
     } = this.props
 
-    const { starCount } = this.state
+    const { starCount, isLoadingImg, errLoadingImg } = this.state
 
     let { date } = this.props
+
+    const errorMessage = <Alert message="Try restarting page to get image" type="error" className="top" />
 
     const filmGenres = FilmGenreIds.map(
       (filmGenreId) => genres.filter(({ id }) => Number(filmGenreId) === Number(id))[0]
@@ -90,10 +104,19 @@ export default class MovieCard extends Component {
       date = 'Date unknown'
     }
 
+    if (!imgLink) {
+      this.imgLoadingError()
+    }
+
     const content = (
       <>
         <div className="movie-card__image">
-          {imgLink && <img src={`https://image.tmdb.org/t/p/w400${imgLink}`} alt="" />}
+          <img
+            src={`https://image.tmdb.org/t/p/w400${imgLink}`}
+            alt=""
+            onLoad={this.imgLoaded}
+            onError={this.imgLoadingError}
+          />
         </div>
 
         <div className="movie-card__info">
@@ -107,7 +130,7 @@ export default class MovieCard extends Component {
       </>
     )
 
-    return <li className="movie-card">{content}</li>
+    return <li className="movie-card">{isLoading ? <Spin size="large" className="centered" /> : content}</li>
   }
 }
 
