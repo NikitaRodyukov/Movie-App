@@ -1,19 +1,31 @@
+/* eslint-disable react/destructuring-assignment */
 import { format, parseISO } from 'date-fns'
 import { Rate } from 'antd'
 import { Component } from 'react'
 
+import MovapiService from '../movapi-service/movapi-service'
+
 import './movie-card.css'
 // добавить state isLoadingImg и errLoadingImg если isLoadingImg=false и errLoadingImg=true то показывать ошибку, если isLoadingImg=true
 // и errLoadingImg=false, то компонент загрузки если оба false то картинку
+// при оценке фильма, нужно записать фильм с оценкой в state app и потом  смотреть оценивали ли этот фильм по id
 export default class MovieCard extends Component {
+  movapiService = new MovapiService()
+
   state = {
-    starCount: 0,
+    starCount: this.props.rateValue,
   }
 
   starCountChange = (number) => {
+    const { id, guestSessionId, addRatedMovie } = this.props
+
     this.setState({
       starCount: number,
     })
+
+    this.movapiService.rateMovie(id, guestSessionId, number)
+
+    addRatedMovie(id, number)
   }
 
   truncate = (text) => {
@@ -49,17 +61,22 @@ export default class MovieCard extends Component {
   }
 
   render() {
-    const { titleName, imgLink, allGenres, genreIds, voteAverage } = this.props
+    const {
+      titleName,
+      imgLink,
+      allGenres: { genres },
+      FilmGenreIds,
+      overview,
+      voteAverage,
+    } = this.props
+
     const { starCount } = this.state
-    const { genres } = allGenres
-    let { date, overview } = this.props
 
-    const filmGenres = genreIds.map((filmGenreId) => {
-      const objHasFilmId = genres.filter(({ id }) => Number(filmGenreId) === Number(id))
+    let { date } = this.props
 
-      if (objHasFilmId.length) return objHasFilmId[0]
-      return ''
-    })
+    const filmGenres = FilmGenreIds.map(
+      (filmGenreId) => genres.filter(({ id }) => Number(filmGenreId) === Number(id))[0]
+    )
 
     const renderTags = filmGenres.map(({ id, name }) => (
       <div key={id} className="tag__name">
@@ -73,21 +90,24 @@ export default class MovieCard extends Component {
       date = 'Date unknown'
     }
 
-    overview = this.truncate(overview)
+    const content = (
+      <>
+        <div className="movie-card__image">
+          {imgLink && <img src={`https://image.tmdb.org/t/p/w400${imgLink}`} alt="" />}
+        </div>
 
-    return (
-      <li className="movie-card">
-        <img className="movie-card__image" src={`https://image.tmdb.org/t/p/w400${imgLink}`} alt={titleName} />
         <div className="movie-card__info">
-          <div className={this.setColor(voteAverage)}>{voteAverage}</div>
+          <div className={this.setColor(voteAverage)}>{voteAverage.toFixed(1)}</div>
           <h1 className="movie-card__name">{titleName}</h1>
           <div className="movie-card__date">{date}</div>
           <div className="movie-card__tags tag">{renderTags}</div>
-          <div className="movie-card__description">{overview}</div>
+          <div className="movie-card__description">{this.truncate(overview)}</div>
           <Rate allowHalf style={{ fontSize: 16 }} count={10} value={starCount} onChange={this.starCountChange} />
         </div>
-      </li>
+      </>
     )
+
+    return <li className="movie-card">{content}</li>
   }
 }
 

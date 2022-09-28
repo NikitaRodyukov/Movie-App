@@ -1,8 +1,3 @@
-body{
-    height: fit-content;
-    background: rgba(0, 0, 0, 0.04);
-}
-
 .app{
     display: flex;
     flex-direction: column;
@@ -10,6 +5,12 @@ body{
     max-width: 1010px;
     background-color: white;
     margin: 0 auto;
+}
+
+.center{
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
 }
 
 .film-search{
