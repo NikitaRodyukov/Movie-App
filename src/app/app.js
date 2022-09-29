@@ -1,12 +1,8 @@
-/* eslint-disable no-param-reassign */
-/* eslint-disable no-return-assign */
-/* eslint-disable react/destructuring-assignment */
-/* eslint-disable react/no-unused-state */
-/* eslint-disable camelcase */
 import { Component } from 'react'
-import { Pagination, Tabs } from 'antd'
+import { Pagination, Tabs, Alert } from 'antd'
 import { debounce } from 'lodash'
 
+import { Provider, Consumer } from '../movieapi-context/movieapi-contex'
 import MovapiService from '../movapi-service/movapi-service'
 import Movies from '../movies/movies'
 import './app.css'
@@ -15,7 +11,7 @@ export default class App extends Component {
   movapiService = new MovapiService()
 
   state = {
-    searchValue: null,
+    searchValue: '',
     movies: [],
     ratedMovies: [],
     totalratedMovies: 0,
@@ -23,10 +19,10 @@ export default class App extends Component {
     totalResults: 0,
     currentPage: 1,
     isLoading: false,
-    error: false,
-    guestSessionId: '',
+    sessionError: false,
+    noFilmsFound: false,
     allGenres: [],
-    currentTab: 1,
+    guestSessionId: '',
     tabRatedInactive: true,
   }
 
@@ -37,11 +33,14 @@ export default class App extends Component {
   }, 500)
 
   componentDidMount() {
-    this.movapiService.createNewGuestSession().then((guestSessionId) =>
-      this.setState({
-        guestSessionId,
-      })
-    )
+    this.movapiService
+      .createNewGuestSession()
+      .then((guestSessionId) =>
+        this.setState({
+          guestSessionId,
+        })
+      )
+      .catch(() => this.setState({ sessionError: true }))
 
     this.movapiService.getMoviesGenres().then((allGenres) =>
       this.setState({
@@ -64,29 +63,31 @@ export default class App extends Component {
     const { searchValue, currentPage } = this.state
 
     if (!searchValue) {
+      this.setState({ movies: [], totalResults: 0 })
       return
     }
 
     this.setState({
       isLoading: true,
-      error: false,
+      noFilmsFound: false,
     })
 
     this.movapiService
       .getMovieList(searchValue, currentPage)
       .then((answer) => {
-        const { results, total_results } = answer
+        const { results, total_results: totalResults } = answer
 
         if (!results.length) {
           this.setState({
-            error: true,
+            isLoading: false,
+            noFilmsFound: true,
           })
         }
 
         this.setState({
           movies: results,
           isLoading: false,
-          totalResults: total_results,
+          totalResults,
         })
       })
       .catch(this.onError)
@@ -94,14 +95,8 @@ export default class App extends Component {
 
   onError = () => {
     this.setState({
-      error: true,
+      noFilmsFound: true,
       isLoading: false,
-    })
-  }
-
-  onPageChange = (page) => {
-    this.setState({
-      currentPage: page,
     })
   }
 
@@ -128,16 +123,16 @@ export default class App extends Component {
 
     this.setState({
       isLoading: true,
-      error: false,
+      noFilmsFound: false,
     })
 
     this.movapiService.getRatedMovies(guestSessionId).then((answer) => {
-      const { results, total_results } = answer
+      const { results, total_results: totalResults } = answer
 
       this.setState({
         ratedMovies: results,
         isLoading: false,
-        totalratedMovies: total_results,
+        totalratedMovies: totalResults,
       })
     })
   }
@@ -148,69 +143,94 @@ export default class App extends Component {
     }
   }
 
+  onPageChange = (page) => {
+    this.setState({
+      currentPage: page,
+    })
+  }
+
   makeRatedTabActive = () => this.setState({ tabRatedInactive: false })
 
   render() {
     const {
       movies,
       ratedMovies,
-      error,
+      isLoading,
       totalResults,
       currentPage,
-      allGenres,
       guestSessionId,
       tabRatedInactive,
       movieRates,
       totalratedMovies,
+      sessionError,
+      noFilmsFound,
+      allGenres,
     } = this.state
 
     return (
-      <div className="app">
-        <Tabs onChange={(key) => this.onTabChange(key)} size="large" centered="true">
-          <Tabs.TabPane tab="Search" key="search">
-            <input
-              className="film-search center"
-              type="text"
-              placeholder="Type to search..."
-              onChange={(event) => this.updateSearchValue(event.target.value)}
-            />
-            <Movies
-              movies={movies}
-              error={error}
-              allGenres={allGenres}
-              movieRates={movieRates}
-              guestSessionId={guestSessionId}
-              addRatedMovie={this.addRatedMovie}
-            />
-            <Pagination
-              current={currentPage}
-              onChange={this.onPageChange}
-              total={totalResults}
-              defaultPageSize={20}
-              showSizeChanger={false}
-              hideOnSinglePage
-            />
-          </Tabs.TabPane>
-          <Tabs.TabPane tab="Rated" key="rated" disabled={tabRatedInactive} onClick={() => this.getRatedMovies()}>
-            <Movies
-              movies={ratedMovies}
-              error={error}
-              allGenres={allGenres}
-              movieRates={movieRates}
-              guestSessionId={guestSessionId}
-              addRatedMovie={this.addRatedMovie}
-            />
-            <Pagination
-              current={currentPage}
-              onChange={this.onPageChange}
-              total={totalratedMovies}
-              defaultPageSize={20}
-              showSizeChanger={false}
-              hideOnSinglePage
-            />
-          </Tabs.TabPane>
-        </Tabs>
-      </div>
+      <Provider value={allGenres}>
+        <div className="app">
+          <Tabs onChange={(key) => this.onTabChange(key)} size="large" centered="true">
+            <Tabs.TabPane tab="Search" key="search">
+              <input
+                className="film-search center"
+                type="text"
+                placeholder="Type to search..."
+                onChange={(event) => this.updateSearchValue(event.target.value)}
+              />
+              {sessionError && (
+                <Alert
+                  message="Failed to create session"
+                  description="Please restart the page to create the session"
+                  type="error"
+                />
+              )}
+              <Consumer>
+                {(genres) => (
+                  <Movies
+                    movies={movies}
+                    isLoading={isLoading}
+                    noFilmsFound={noFilmsFound}
+                    allGenres={genres}
+                    movieRates={movieRates}
+                    guestSessionId={guestSessionId}
+                    addRatedMovie={this.addRatedMovie}
+                  />
+                )}
+              </Consumer>
+              <Pagination
+                current={currentPage}
+                onChange={this.onPageChange}
+                total={totalResults}
+                defaultPageSize={20}
+                showSizeChanger={false}
+                hideOnSinglePage
+              />
+            </Tabs.TabPane>
+            <Tabs.TabPane tab="Rated" key="rated" disabled={tabRatedInactive} onClick={() => this.getRatedMovies()}>
+              <Consumer>
+                {(genres) => (
+                  <Movies
+                    movies={ratedMovies}
+                    allGenres={genres}
+                    movieRates={movieRates}
+                    guestSessionId={guestSessionId}
+                    addRatedMovie={this.addRatedMovie}
+                  />
+                )}
+              </Consumer>
+              <Pagination
+                current={currentPage}
+                onChange={this.onPageChange}
+                total={totalratedMovies}
+                defaultPageSize={20}
+                showSizeChanger={false}
+                hideOnSinglePage
+              />
+            </Tabs.TabPane>
+          </Tabs>
+        </div>
+      </Provider>
     )
   }
 }

@@ -1,20 +1,32 @@
-/* eslint-disable no-unused-vars */
-/* eslint-disable react/destructuring-assignment */
+/* eslint-disable react/no-unused-class-component-methods */
 import { format, parseISO } from 'date-fns'
 import { Spin, Rate, Alert } from 'antd'
 import { Component } from 'react'
+import PropTypes from 'prop-types'
 
 import MovapiService from '../movapi-service/movapi-service'
 
 import './movie-card.css'
-// добавить state isLoadingImg и errLoadingImg если isLoadingImg=false и errLoadingImg=true то показывать ошибку, если isLoadingImg=true
-// и errLoadingImg=false, то компонент загрузки если оба false то картинку
 
 export default class MovieCard extends Component {
   movapiService = new MovapiService()
 
   state = {
+    isLoading: true,
+    loadingImageError: false,
+    imgUrl: '',
+    // eslint-disable-next-line react/destructuring-assignment
     starCount: this.props.rateValue,
+  }
+
+  componentDidMount() {
+    const { imgLink } = this.props
+    this.movapiService
+      .getImage(imgLink)
+      .then((response) => {
+        this.setState({ isLoading: false, imgUrl: response.url })
+      })
+      .catch(() => this.setState({ isLoading: false, loadingImageError: true }))
   }
 
   starCountChange = (number) => {
@@ -64,20 +76,18 @@ export default class MovieCard extends Component {
   render() {
     const {
       titleName,
-      imgLink,
-      allGenres: { genres },
+      allGenres: { genres }, // здесь у нас объекты с id и названием жанров
       FilmGenreIds,
       overview,
       voteAverage,
-      isLoading,
     } = this.props
 
-    const { starCount } = this.state
+    const { starCount, isLoading, loadingImageError, imgUrl } = this.state
 
     let { date } = this.props
 
     const filmGenres = FilmGenreIds.map(
-      (filmGenreId) => genres.filter(({ id }) => Number(filmGenreId) === Number(id))[0]
+      (filmGenreId) => genres.filter(({ id }) => Number(filmGenreId) === Number(id))[0] // метод filter возвращает массив с одним объектом, поэтому мы просто берем его
     )
 
     const renderTags = filmGenres.map(({ id, name }) => (
@@ -92,11 +102,13 @@ export default class MovieCard extends Component {
       date = 'Date unknown'
     }
 
-    const content = (
+    const content = isLoading ? (
+      <Spin size="large" />
+    ) : (
       <>
         <div className="movie-card__image">
-          {imgLink ? (
-            <img src={`https://image.tmdb.org/t/p/w400${imgLink}`} alt="" />
+          {!loadingImageError ? (
+            <img src={imgUrl} alt="Film poster" />
           ) : (
             <Alert message="Error" description="Error while downloading image." type="error" />
           )}
@@ -113,10 +125,26 @@ export default class MovieCard extends Component {
       </>
     )
 
-    return <li className="movie-card">{isLoading ? <Spin size="large" className="centered" /> : content}</li>
+    return <li className="movie-card">{content}</li>
   }
 }
 
 MovieCard.defaultProps = {
+  titleName: 'No title',
   date: new Date(),
+  imgLink: '',
+  genres: [''],
+  FilmGenreIds: [{}],
+  overview: 'No description found',
+  voteAverage: 0,
+}
+
+MovieCard.propTypes = {
+  titleName: PropTypes.string,
+  date: PropTypes.instanceOf(Date),
+  imgLink: PropTypes.string,
+  genres: PropTypes.arrayOf(PropTypes.string),
+  FilmGenreIds: PropTypes.oneOfType([PropTypes.object]),
+  overview: PropTypes.string,
+  voteAverage: PropTypes.number,
 }

@@ -58,4 +58,14 @@ export default class MovapiService {
 
     return response
   }
+
+  async getImage(imgLink) {
+    const url = `https://image.tmdb.org/t/p/w400${imgLink}`
+    const answer = await fetch(url)
+
+    if (!answer.ok) {
+      throw new Error(`Could not fetch ${url}, received ${answer.status}`)
+    }
+    return answer
+  }
 }

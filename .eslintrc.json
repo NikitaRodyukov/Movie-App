@@ -21,6 +21,8 @@
     },
     "plugins": ["react", "eslint-plugin-prettier", "import"],
     "rules": {
+      "no-return-assign":"off",
+      "no-param-reassign":"off", 
       "indent": ["error", 2],
       "linebreak-style": [0, "unix"],
       "quotes": ["error", "single"],
