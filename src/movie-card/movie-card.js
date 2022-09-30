@@ -55,21 +55,18 @@ export default class MovieCard extends Component {
   setColor = (rating) => {
     let className = 'movie-card__vote'
 
-    if (rating >= 0 && rating < 3) {
-      className += ' red'
+    const colors = {
+      0: ' red',
+      3: ' orange',
+      5: ' yellow',
+      7: ' green',
     }
 
-    if (rating >= 3 && rating < 5) {
-      className += ' orange'
-    }
+    const values = Object.keys(colors)
+    const finalColourValue = values.findLast((value) => rating >= value)
 
-    if (rating >= 5 && rating < 7) {
-      className += ' yellow'
-    }
+    className += colors[finalColourValue]
 
-    if (rating >= 7) {
-      className += ' green'
-    }
     return className
   }
 
@@ -87,7 +84,7 @@ export default class MovieCard extends Component {
     let { date } = this.props
 
     const filmGenres = FilmGenreIds.map(
-      (filmGenreId) => genres.filter(({ id }) => Number(filmGenreId) === Number(id))[0] // метод filter возвращает массив с одним объектом, поэтому мы просто берем его
+      (filmGenreId) => genres.filter(({ id }) => Number(filmGenreId) === Number(id))[0] // метод filter возвращает массив с одним объектом, поэтому мы просто берем первый элемент
     )
 
     const renderTags = filmGenres.map(({ id, name }) => (
