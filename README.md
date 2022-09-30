@@ -1,1 +1,1 @@
-https://movie-cfriom9yt-nikitarodyukov.vercel.app/
+https://movie-bomu7u2o5-nikitarodyukov.vercel.app/
